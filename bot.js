@@ -35,7 +35,7 @@ function onMessageHandler(channel,tags, msg, self) {
     const commandName = msg.trim();
 
     try {
-        let fileContents = fs.readFileSync('./botcommands.yaml', 'utf8');
+        let fileContents = fs.readFileSync('./bot_commands/autoreply.yaml', 'utf8');
         let data = yaml.load(fileContents);
 
         if (data[commandName]) {
@@ -72,7 +72,7 @@ function timedMessages(){
     const channel = process.env.CHANNEL_NAME
 
     try {
-        let fileContents = fs.readFileSync('./timedmessages.json', 'utf8');
+        let fileContents = fs.readFileSync('./bot_commands/timers.json', 'utf8');
         let data = JSON.parse(fileContents);
 
 
