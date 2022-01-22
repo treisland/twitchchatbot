@@ -2,6 +2,8 @@ const tmi = require('tmi.js');
 const dotenv = require('dotenv');
 const yaml = require('js-yaml')
 const fs = require('fs');
+const { time } = require('console');
+const internal = require('stream');
 
 dotenv.config()
 
@@ -18,6 +20,7 @@ const opts = {
 
 // Create a client with our options
 const client = new tmi.client(opts);
+const bot_file="./autoreply.json"
 
 // Register our event handlers (defined below)
 client.on('message', onMessageHandler);
@@ -35,44 +38,32 @@ function onMessageHandler(channel,tags, msg, self) {
     const commandName = msg.trim();
 
     try {
-        let fileContents = fs.readFileSync('./bot_commands/autoreply.yaml', 'utf8');
-        let data = yaml.load(fileContents);
+        let fileContents = fs.readFileSync(bot_file, 'utf8');
+        let data = JSON.parse(fileContents);
 
-        if (data[commandName]) {
-            //client.say(target, data[commandName]);
-            client.say(channel, `@${tags.username}, ${data[commandName]}`);
+        for(var i = 0; i < data.length; i++) {
+            var obj = data[i];
+            if (obj.enabled && obj.command === commandName) {
+                //client.say(target, data[commandName]);
+                client.say(channel, `@${tags.username}, ${obj.message}`);
+            }
         }
     } catch (e) {
         console.log(e);
     }
 }
 
-// Function called when the "dice" command is issued
-function rollDice() {
-    const sides = 20;
-    return Math.floor(Math.random() * sides) + 1;
-}
-
-function timedMessages(){
-    client.say("hello world")
-}
 // Called every time the bot connects to Twitch chat
 function onConnectedHandler(addr, port) {
     console.log(`* Connected to ${addr}:${port}`);
     timedMessages()
 }
 
-function timer_github(){
-    setInterval(() => {
-        client.say(process.env.CHANNEL_NAME, "");
-    }, 5000);
-}
-
 function timedMessages(){
     const channel = process.env.CHANNEL_NAME
 
     try {
-        let fileContents = fs.readFileSync('./bot_commands/timers.json', 'utf8');
+        let fileContents = fs.readFileSync(bot_file, 'utf8');
         let data = JSON.parse(fileContents);
 
 
@@ -80,18 +71,23 @@ function timedMessages(){
         for(var i = 0; i < data.length; i++) {
             (function(i){
                 var obj = data[i];
-                var timer=data[i].seconds * 1000
+             
+                var timer = "timer" in obj ? obj.timer : null
 
-                if (obj.enabled){
-                    
-                    if (obj.onStart){
-                        client.say(channel, obj.message)
-                    }
+                if (!timer || !timer.enabled) { return }
 
-                    setInterval(() => {
-                        client.say(channel, obj.message);
-                    }, timer);
+                if(timer.onStart){
+                    client.say(channel, obj.message)
                 }
+
+                var interval = timer.seconds * 1000
+
+                if (interval <= 0){ return }
+
+                setInterval(() => {
+                    client.say(channel, obj.message);
+                }, interval);
+                
             })(i)
         }
 

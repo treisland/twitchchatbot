@@ -1,0 +1,22 @@
+[
+  {
+    "command":"!info",
+    "enabled": true,
+    "message": "working on chatbot api testing",
+    "timer":{
+      "enabled": true,
+      "onStart": false,
+      "seconds": 10
+    }
+  },
+  {
+    "command":"!about",
+    "enabled": true,
+    "message": "sample text",
+    "timer":{
+      "enabled": true,
+      "onStart": true,
+      "seconds": 30
+    }
+  }
+]
