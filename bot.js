@@ -1,17 +1,19 @@
 const tmi = require('tmi.js');
 const dotenv = require('dotenv');
+const yaml = require('js-yaml')
+const fs = require('fs');
 
 dotenv.config()
 
 // Define configuration options
 const opts = {
-  identity: {
-    username: process.env.BOT_USERNAME,
-    password: process.env.OAUTH_TOKEN
-  },
-  channels: [
-    process.env.CHANNEL_NAME
-  ]
+    identity: {
+        username: process.env.BOT_USERNAME,
+        password: process.env.OAUTH_TOKEN
+    },
+    channels: [
+        process.env.CHANNEL_NAME
+    ]
 };
 
 // Create a client with our options
@@ -25,33 +27,36 @@ client.on('connected', onConnectedHandler);
 client.connect();
 
 // Called every time a message comes in
-function onMessageHandler (target, context, msg, self) {
-  if (self) { return; } // Ignore messages from the bot
+function onMessageHandler(channel,tags, msg, self) {
+    if (self) { return; } // Ignore messages from the bot
 
-  // Remove whitespace from chat message
-  const commandName = msg.trim();
+    // Remove whitespace from chat message
+    console.log(msg);
+    const commandName = msg.trim();
 
-  // If the command is known, let's execute it
-  if (commandName === '!d20') {
-    const num = rollDice(commandName);
-    client.say(target, `You rolled a ${num}. Link: https://glitch.com/~twitch-chatbot`);
-    console.log(`* Executed ${commandName} command`);
-  } else if (commandName === '!info'){
-      client.say(target, 'working on chatbot and twitter apis');
-  }
-  else {
-    console.log(`* Unknown command ${commandName}`);
-  }
-  
+    try {
+        let fileContents = fs.readFileSync('./botcommands.yaml', 'utf8');
+        let data = yaml.load(fileContents);
+
+        if (data[commandName]) {
+            //client.say(target, data[commandName]);
+            client.say(channel, `@${tags.username}, ${data[commandName]}`);
+        }
+    } catch (e) {
+        console.log(e);
+    }
 }
 
 // Function called when the "dice" command is issued
-function rollDice () {
-  const sides = 20;
-  return Math.floor(Math.random() * sides) + 1;
+function rollDice() {
+    const sides = 20;
+    return Math.floor(Math.random() * sides) + 1;
 }
 
+function timedMessages(){
+    client.say("hello world")
+}
 // Called every time the bot connects to Twitch chat
-function onConnectedHandler (addr, port) {
-  console.log(`* Connected to ${addr}:${port}`);
+function onConnectedHandler(addr, port) {
+    console.log(`* Connected to ${addr}:${port}`);
 }
